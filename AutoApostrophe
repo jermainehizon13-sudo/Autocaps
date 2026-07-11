@@ -1,0 +1,81 @@
+script_name("Auto Apostrophe")
+script_author("ChatGPT")
+
+require "lib.moonloader"
+
+local enabled = true
+
+local contractions = {
+    ["dont"] = "don't",
+    ["cant"] = "can't",
+    ["wont"] = "won't",
+    ["isnt"] = "isn't",
+    ["arent"] = "aren't",
+    ["wasnt"] = "wasn't",
+    ["werent"] = "weren't",
+    ["hasnt"] = "hasn't",
+    ["havent"] = "haven't",
+    ["hadnt"] = "hadn't",
+    ["doesnt"] = "doesn't",
+    ["didnt"] = "didn't",
+    ["shouldnt"] = "shouldn't",
+    ["couldnt"] = "couldn't",
+    ["wouldnt"] = "wouldn't",
+    ["mustnt"] = "mustn't",
+    ["neednt"] = "needn't",
+    ["im"] = "I'm",
+    ["ive"] = "I've",
+    ["ill"] = "I'll",
+    ["id"] = "I'd",
+    ["youre"] = "you're",
+    ["youve"] = "you've",
+    ["youll"] = "you'll",
+    ["theyre"] = "they're",
+    ["theyve"] = "they've",
+    ["theyll"] = "they'll",
+    ["were"] = "we're",
+    ["weve"] = "we've",
+    ["well"] = "we'll",
+    ["thats"] = "that's",
+    ["theres"] = "there's",
+    ["heres"] = "here's",
+    ["whats"] = "what's",
+    ["whos"] = "who's",
+    ["lets"] = "let's",
+    ["itll"] = "it'll",
+    ["itd"] = "it'd"
+}
+
+function fixApostrophes(text)
+    for wrong, correct in pairs(contractions) do
+        text = text:gsub("%f[%a]" .. wrong .. "%f[%A]", correct)
+    end
+    return text
+end
+
+function main()
+    while not isSampAvailable() do
+        wait(100)
+    end
+
+    sampRegisterChatCommand("autoapostrophe", function()
+        enabled = not enabled
+        sampAddChatMessage(
+            "[Auto Apostrophe] " .. (enabled and "Activated." or "Deactivated."),
+            0x00FF00
+        )
+    end)
+
+    while true do
+        wait(100)
+
+        if enabled and sampIsChatInputActive() then
+            local text = sampGetChatInputText()
+
+            -- Ignore commands
+            if text:sub(1,1) ~= "/" then
+                sampSetChatInputText(fixApostrophes(text))
+            end
+        end
+    end
+end
