@@ -1,4 +1,4 @@
-script_name("AutoCaps")
+script_name("AutoCapsByBenTiung")
 script_author("Ben_Tiung")
 
 require "lib.moonloader"
