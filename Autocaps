@@ -1,0 +1,59 @@
+script_name("AutoCaps")
+script_author("Ben_Tiung")
+
+require "lib.moonloader"
+
+local enabled = true
+local lastText = ""
+
+-- Capitalize first letter and letters after . ? !
+function autoCaps(text)
+    -- Skip commands
+    if text:sub(1,1) == "/" then
+        return text
+    end
+
+    -- First letter
+    text = text:gsub("^(%l)", string.upper)
+
+    -- After punctuation
+    text = text:gsub("([%.%!%?]%s+)(%l)",
+        function(punct, letter)
+            return punct .. string.upper(letter)
+        end)
+
+    return text
+end
+
+function main()
+    while not isSampAvailable() do
+        wait(100)
+    end
+
+    sampRegisterChatCommand("autocaps", function()
+        enabled = not enabled
+
+        if enabled then
+            sampAddChatMessage("[AutoCaps] Activated.", 0x00FF00)
+        else
+            sampAddChatMessage("[AutoCaps] Deactivated.", 0xFF0000)
+        end
+    end)
+
+    sampAddChatMessage("[AutoCaps] Loaded. Use /autocaps to toggle.", 0xFFFF00)
+
+    while true do
+        wait(50)
+
+        if enabled and sampIsChatInputActive() then
+            local txt = sampGetChatInputText()
+
+            if txt ~= lastText then
+                lastText = autoCaps(txt)
+                sampSetChatInputText(lastText)
+            end
+        else
+            lastText = ""
+        end
+    end
+end
