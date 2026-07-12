@@ -1,0 +1,120 @@
+script_name("Auto Grammar")
+script_author("Ben Tiung")
+script_version("1.0.2")
+
+require "lib.moonloader"
+local sampev = require "lib.samp.events"
+
+local enabled = true
+
+local apostropheFix = {
+    ["im"] = "I'm",
+    ["ive"] = "I've",
+    ["ill"] = "I'll",
+    ["id"] = "I'd",
+    ["dont"] = "don't",
+    ["cant"] = "can't",
+    ["wont"] = "won't",
+    ["didnt"] = "didn't",
+    ["doesnt"] = "doesn't",
+    ["isnt"] = "isn't",
+    ["arent"] = "aren't",
+    ["wasnt"] = "wasn't",
+    ["werent"] = "weren't",
+    ["havent"] = "haven't",
+    ["hasnt"] = "hasn't",
+    ["hadnt"] = "hadn't",
+    ["shouldnt"] = "shouldn't",
+    ["couldnt"] = "couldn't",
+    ["wouldnt"] = "wouldn't",
+    ["mustnt"] = "mustn't",
+    ["lets"] = "let's",
+    ["thats"] = "that's",
+    ["whats"] = "what's",
+    ["whos"] = "who's",
+    ["theres"] = "there's",
+    ["heres"] = "here's",
+    ["its"] = "it's",
+    ["youre"] = "you're",
+    ["youve"] = "you've",
+    ["youll"] = "you'll",
+    ["theyre"] = "they're",
+    ["theyve"] = "they've",
+    ["weve"] = "we've",
+    ["were"] = "we're",
+    ["hes"] = "he's",
+    ["shes"] = "she's"
+}
+
+function fixGrammar(text)
+
+    -- Fix apostrophe words
+    text = text:gsub("%S+", function(word)
+        local clean = word:lower()
+
+        local punctuation = ""
+        if clean:sub(-1):match("[%.%!%?,]") then
+            punctuation = clean:sub(-1)
+            clean = clean:sub(1, -2)
+        end
+
+        if apostropheFix[clean] then
+            return apostropheFix[clean] .. punctuation
+        end
+
+        return word
+    end)
+
+    -- Fix standalone i
+    text = text:gsub("%f[%a]i%f[%A]", "I")
+
+    -- Capitalize first letter
+    text = text:gsub("^%s*(%l)", function(c)
+        return c:upper()
+    end)
+
+    -- Capitalize after . ? !
+    text = text:gsub("([%.%!%?]%s+)(%l)", function(symbol, c)
+        return symbol .. c:upper()
+    end)
+
+    return text
+end
+
+
+function main()
+    repeat wait(0) until isSampAvailable()
+
+    sampRegisterChatCommand("grammar", function()
+        enabled = not enabled
+
+        if enabled then
+            sampAddChatMessage("{00FF00}Auto Grammar enabled.", -1)
+        else
+            sampAddChatMessage("{FF0000}Auto Grammar disabled.", -1)
+        end
+    end)
+
+    sampAddChatMessage("{00FF00}Auto Grammar v1.0.2 loaded. Use /grammar to toggle.", -1)
+
+    wait(-1)
+end
+
+
+function sampev.onSendChat(message)
+
+    if not enabled then
+        return
+    end
+
+    -- Only normal chat, ignore commands
+    if message:sub(1,1) == "/" then
+        return
+    end
+
+    local fixed = fixGrammar(message)
+
+    if fixed ~= message then
+        return {fixed}
+    end
+end
