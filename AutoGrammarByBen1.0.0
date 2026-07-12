@@ -1,0 +1,110 @@
+script_name("Auto Grammar")
+script_author("Ben_Tiung")
+script_version("1.0.0")
+
+require "lib.moonloader"
+local sampev = require "lib.samp.events"
+
+local enabled = true
+
+function main()
+    while not isSampAvailable() do wait(100) end
+
+    sampRegisterChatCommand("autogrammar", function()
+        enabled = not enabled
+
+        if enabled then
+            sampAddChatMessage("[AutoGrammar] Activated.", 0x00FF00)
+        else
+            sampAddChatMessage("[AutoGrammar] Deactivated.", 0xFF0000)
+        end
+    end)
+
+    sampAddChatMessage("[AutoGrammar] Loaded! Type /autogrammar to enable or disable.", 0x00FF00)
+
+    wait(-1)
+end
+
+function sampev.onSendChat(message)
+    if not enabled then return end
+
+    local prefixes = {
+        "/s ",
+        "/g ",
+        "/b ",
+        "/pr ",
+        "/f ",
+        "/newb "
+    }
+
+    for _, prefix in ipairs(prefixes) do
+        if message:lower():sub(1, #prefix) == prefix then
+            local text = grammar(message:sub(#prefix + 1))
+            return {prefix .. text}
+        end
+    end
+
+    if message:sub(1, 1) == "/" then
+        return
+    end
+
+    return {grammar(message)}
+end
+
+function grammar(text)
+    -- Capitalize first letter
+    text = text:gsub("^%l", string.upper)
+
+    -- Capitalize after . ? !
+    text = text:gsub("([%.%!%?]%s+)(%l)", function(a, b)
+        return a .. b:upper()
+    end)
+
+    -- Standalone "i" -> "I"
+    text = text:gsub("(%f[%a])i(%f[%A])", "I")
+
+    -- Apostrophe fixes
+    local fixes = {
+        ["im"] = "I'm",
+        ["ive"] = "I've",
+        ["id"] = "I'd",
+        ["ill"] = "I'll",
+        ["dont"] = "don't",
+        ["doesnt"] = "doesn't",
+        ["didnt"] = "didn't",
+        ["cant"] = "can't",
+        ["couldnt"] = "couldn't",
+        ["wouldnt"] = "wouldn't",
+        ["shouldnt"] = "shouldn't",
+        ["wont"] = "won't",
+        ["isnt"] = "isn't",
+        ["arent"] = "aren't",
+        ["wasnt"] = "wasn't",
+        ["werent"] = "weren't",
+        ["hasnt"] = "hasn't",
+        ["havent"] = "haven't",
+        ["hadnt"] = "hadn't",
+        ["its"] = "it's",
+        ["thats"] = "that's",
+        ["theres"] = "there's",
+        ["heres"] = "here's",
+        ["whats"] = "what's",
+        ["whos"] = "who's",
+        ["lets"] = "let's",
+        ["youre"] = "you're",
+        ["youve"] = "you've",
+        ["youll"] = "you'll",
+        ["theyre"] = "they're",
+        ["weve"] = "we've",
+        ["were"] = "we're",
+        ["well"] = "we'll",
+        ["hes"] = "he's",
+        ["shes"] = "she's"
+    }
+
+    text = text:gsub("%f[%a]([%a]+)%f[%A]", function(word)
+        return fixes[word:lower()] or word
+    end)
+
+    return text
+end
