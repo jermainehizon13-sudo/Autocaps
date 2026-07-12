@@ -1,0 +1,110 @@
+script_name("Auto Grammar")
+script_author("Ben_Tiung")
+script_version("1.0.0")
+
+require "lib.moonloader"
+local sampev = require "lib.samp.events"
+
+local enabled = true
+
+function main()
+    while not isSampAvailable() do wait(100) end
+
+    sampRegisterChatCommand("autogrammar", function()
+        enabled = not enabled
+
+        if enabled then
+            sampAddChatMessage("{00FF00}[Auto Grammar] Activated.", -1)
+        else
+            sampAddChatMessage("{FF0000}[Auto Grammar] Deactivated.", -1)
+        end
+    end)
+
+    sampAddChatMessage("{00FF00}[Auto Grammar] Loaded. Use /autogrammar to enable or disable.", -1)
+
+    wait(-1)
+end
+
+function sampev.onSendChat(msg)
+    if not enabled then return end
+
+    local cmd, text = msg:match("^(%S+)%s+(.+)$")
+
+    if cmd then
+        local allow = {
+            ["/s"] = true,
+            ["/g"] = true,
+            ["/b"] = true,
+            ["/pr"] = true,
+            ["/f"] = true,
+            ["/newb"] = true
+        }
+
+        if allow[cmd:lower()] then
+            return {cmd .. " " .. grammar(text)}
+        else
+            return -- Ignore every other command
+        end
+    end
+
+    -- Normal chat
+    return {grammar(msg)}
+end
+
+function grammar(text)
+    -- First letter
+    text = text:gsub("^%l", string.upper)
+
+    -- After . ? !
+    text = text:gsub("([%.%!%?]%s+)(%l)", function(a, b)
+        return a .. b:upper()
+    end)
+
+    -- Standalone i -> I
+    text = text:gsub("%f[%a]i%f[%A]", "I")
+
+    -- Apostrophe fixes
+    local fixes = {
+        im="I'm",
+        ive="I've",
+        ill="I'll",
+        id="I'd",
+        dont="don't",
+        doesnt="doesn't",
+        didnt="didn't",
+        cant="can't",
+        couldnt="couldn't",
+        wouldnt="wouldn't",
+        shouldnt="shouldn't",
+        wont="won't",
+        isnt="isn't",
+        arent="aren't",
+        wasnt="wasn't",
+        werent="weren't",
+        havent="haven't",
+        hasnt="hasn't",
+        hadnt="hadn't",
+        youre="you're",
+        youve="you've",
+        youll="you'll",
+        theyre="they're",
+        were="we're",
+        weve="we've",
+        well="we'll",
+        hes="he's",
+        shes="she's",
+        its="it's",
+        thats="that's",
+        theres="there's",
+        heres="here's",
+        whats="what's",
+        whos="who's",
+        lets="let's"
+    }
+
+    text = text:gsub("%f[%a]([A-Za-z]+)%f[%A]", function(word)
+        return fixes[word:lower()] or word
+    end)
+
+    return text
+end
